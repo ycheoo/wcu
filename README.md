@@ -2,7 +2,39 @@
 
 A small systemd service and timer that send a minimal prompt to Claude Code at four scheduled times each day. The example schedule uses `Asia/Tokyo`; change it in the timer files if needed.
 
-Claude Code must already be authenticated for the account the timer runs as. Run `claude -p "Reply with only OK."` once by hand before installing.
+Claude Code must be authenticated for the account the timer runs as. Set that up before installing — see [Authentication](#authentication).
+
+## Authentication
+
+A timer needs credentials that survive unattended, which an interactive login does not provide (see [Notes](#notes)). Generate a long-lived token instead:
+
+```sh
+claude setup-token
+```
+
+Hand it to the unit through an environment file. The `read` lines below are bash syntax; run them under bash if your shell is something else.
+
+System service — systemd reads the file as root before dropping to the instance user, so it stays out of the user's home:
+
+```sh
+sudo mkdir -p /etc/wake-claude-up
+umask 077; read -rsp 'Token: ' T; echo
+printf 'CLAUDE_CODE_OAUTH_TOKEN=%s\n' "$T" | sudo tee "/etc/wake-claude-up/$USER.env" >/dev/null
+unset T
+sudo chmod 600 "/etc/wake-claude-up/$USER.env"
+sudo chown root:root "/etc/wake-claude-up/$USER.env"
+```
+
+User service:
+
+```sh
+mkdir -p ~/.config/wake-claude-up
+umask 077; read -rsp 'Token: ' T; echo
+printf 'CLAUDE_CODE_OAUTH_TOKEN=%s\n' "$T" > ~/.config/wake-claude-up/env
+unset T
+```
+
+Both units reference their environment file with a leading `-`, so they still start when it is absent and fall back to whatever login Claude Code has stored. To add the token to an already-installed unit, write the file and run `daemon-reload` — no unit edit is needed.
 
 ## User service
 
@@ -56,6 +88,10 @@ Environment="HTTPS_PROXY=http://127.0.0.1:8080"
 ```
 
 ## Notes
+
+An interactive login is not enough for a timer. Its refresh token carries a fixed expiry that does not slide with use, so the session eventually dies while the timer keeps firing, and every run from then on fails with `Failed to authenticate: OAuth session expired and could not be refreshed`. Claude Code also clears the stored credentials on that first failure, so there is nothing left to recover. A token from `claude setup-token` is not subject to this.
+
+Nothing surfaces that failure on its own — the timer stays active and the service just exits non-zero, so a broken schedule can go unnoticed for days. Check with `systemctl is-failed "wake-claude-up@$USER.service"` (or `systemctl --user is-failed wake-claude-up.service`), or attach an `OnFailure=` unit that notifies you.
 
 Missed runs are not caught up (`Persistent=false`): if the machine is off or asleep at a scheduled time, that run is skipped rather than fired late at the wrong point in the day.
 

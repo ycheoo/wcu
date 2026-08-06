@@ -7,6 +7,7 @@ Wants=network-online.target
 Type=oneshot
 User=%i
 Environment="PATH=/home/%i/.local/bin:/usr/local/bin:/usr/bin:/bin"
+EnvironmentFile=-/etc/wake-claude-up/%i.env
 WorkingDirectory=~
 ExecStart=/usr/bin/env claude --safe-mode -p --model haiku --tools "" --no-session-persistence "Reply with only OK."
 TimeoutStartSec=5min

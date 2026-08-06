@@ -4,6 +4,7 @@ Description=Send a minimal scheduled prompt to Claude Code
 [Service]
 Type=oneshot
 Environment="PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin"
+EnvironmentFile=-%h/.config/wake-claude-up/env
 WorkingDirectory=%h
 ExecStart=/usr/bin/env claude --safe-mode -p --model haiku --tools "" --no-session-persistence "Reply with only OK."
 TimeoutStartSec=5min
