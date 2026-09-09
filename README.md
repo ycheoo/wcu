@@ -1,4 +1,4 @@
-# Wake Claude Up
+# Wake Claude/Codex Up
 
 Small systemd services and timers that send a minimal prompt to a coding agent at four scheduled times each day, so its five-hour usage windows start when you want them to rather than whenever you happen to type the first request. Units ship for Claude Code (`wake-claude-up`) and for Codex (`wake-codex-up`); the two are independent, so install either one or both. The example schedule uses `Asia/Tokyo`; change it in the timer files if needed.
 
