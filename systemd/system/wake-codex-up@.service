@@ -1,0 +1,12 @@
+[Unit]
+Description=Send a minimal scheduled prompt to Codex for %i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=%i
+Environment="PATH=/home/%i/.local/bin:/usr/local/bin:/usr/bin:/bin"
+WorkingDirectory=~
+ExecStart=/usr/bin/env codex exec --ignore-user-config --skip-git-repo-check --ephemeral --sandbox read-only -c approval_policy=never "Reply with only OK."
+TimeoutStartSec=5min

@@ -1,0 +1,9 @@
+[Unit]
+Description=Send a minimal scheduled prompt to Codex
+
+[Service]
+Type=oneshot
+Environment="PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin"
+WorkingDirectory=%h
+ExecStart=/usr/bin/env codex exec --ignore-user-config --skip-git-repo-check --ephemeral --sandbox read-only -c approval_policy=never "Reply with only OK."
+TimeoutStartSec=5min
